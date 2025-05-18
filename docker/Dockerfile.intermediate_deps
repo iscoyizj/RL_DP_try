@@ -1,0 +1,14 @@
+FROM dppo_image
+
+# Create a workspace directory
+WORKDIR /workspace
+
+# Copy only pyproject.toml first to leverage Docker cache for dependencies
+COPY pyproject.toml .
+
+# Install Python dependencies specified in pyproject.toml
+# Using python -m pip for explicitness and --no-cache-dir to reduce image size
+RUN python -m pip install --no-cache-dir .[all]
+
+# Clean up pip cache again, just in case (though --no-cache-dir should handle it)
+RUN rm -rf /root/.cache/pip 

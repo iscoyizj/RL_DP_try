@@ -145,3 +145,7 @@ dmypy.json
 cfg/robomimic/*.sh
 
 *.out
+
+isaacgym/
+docker/IsaacGym_Preview_4_Package.tar.gz
+docker/mujoco210-linux-x86_64.tar.gz

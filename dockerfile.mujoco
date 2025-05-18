@@ -1,0 +1,60 @@
+# Isaac Gym + MuJoCo 210 + CUDA 12.2 + Python 3.8
+FROM nvcr.io/nvidia/pytorch:23.12-py3
+
+# Switch to root to install dependencies
+USER root
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install MuJoCo system dependencies
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libosmesa6-dev \
+    libglew-dev \
+    patchelf \
+    wget \
+    unzip \
+    libxrandr-dev \
+    libxcursor-dev \
+    libxi-dev \
+    libxinerama-dev \
+    libxxf86vm-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Isaac Gym (Preview 4)
+# Assuming you manually downloaded the Isaac Gym Preview 4 zip
+# Copy it into the same folder as this Dockerfile before build
+COPY isaacgym /workspace/isaacgym
+ENV ISAACGYM_PATH=/workspace/isaacgym
+ENV PYTHONPATH=${ISAACGYM_PATH}:${PYTHONPATH}
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install -r ${ISAACGYM_PATH}/python/requirements.txt
+
+# Install MuJoCo 210
+ENV MUJOCO_VERSION=210
+ENV MUJOCO_PATH=/root/.mujoco/mujoco${MUJOCO_VERSION}
+RUN mkdir -p /root/.mujoco && \
+    wget https://mujoco.org/download/mujoco${MUJOCO_VERSION}-linux-x86_64.tar.gz && \
+    tar -xzf mujoco${MUJOCO_VERSION}-linux-x86_64.tar.gz -C /root/.mujoco/ && \
+    rm mujoco${MUJOCO_VERSION}-linux-x86_64.tar.gz && \
+    ln -s ${MUJOCO_PATH} /root/.mujoco/mujoco
+
+# Copy your MuJoCo license key (required for MuJoCo 210)
+COPY mjkey.txt /root/.mujoco/mjkey.txt
+
+# MuJoCo environment setup
+ENV MUJOCO_PY_MUJOCO_PATH=/root/.mujoco/mujoco
+ENV MUJOCO_PY_MJKEY_PATH=/root/.mujoco/mjkey.txt
+ENV LD_LIBRARY_PATH=${MUJOCO_PY_MUJOCO_PATH}/bin:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH=/usr/lib/nvidia:${LD_LIBRARY_PATH}
+ENV MUJOCO_GL=osmesa
+
+# Optional: set working directory
+WORKDIR /workspace/isaacgym/python
+
+# Default command
+CMD ["/bin/bash"]

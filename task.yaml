@@ -1,0 +1,29 @@
+name: dppo-skypilot-job
+
+# Requested resources
+# Adjust based on your needs (CPU, GPU, memory)
+resources:
+  # cpus: 2+
+  # memory: 16GB+
+  # For GPU tasks (e.g., if using Isaac Gym or large models):
+  # cloud: aws # or gcp, azure
+  # instance_type: g4dn.xlarge # Example: AWS instance with a T4 GPU
+  accelerators: A100:8 # Or V100:1, A100:1 etc. Adjust as needed.
+  # spot: true # Use spot instances for cost savings, if appropriate
+  image_id: docker:iscoyizj/mujoco_isaac:latest
+# Number of nodes (for distributed training, usually 1 for single-node jobs)
+# num_nodes: 1
+
+# Directory from your local machine to be synchronized to the remote instance.
+# This syncs your current project directory to /sky_workdir on the instance.
+file_mounts:
+  /sky_workdir: .
+
+# Optional: Commands to run on the remote instance before Docker starts.
+# Can be used for global setup like cloud CLI configurations or pre-downloads.
+# For now, we assume WANDB_API_KEY and other env vars are baked into your dppo_app:latest.
+# If not, you could set them here or in the `envs` section.
+# setup: |
+#   echo "Instance setup (if any)..."
+
+

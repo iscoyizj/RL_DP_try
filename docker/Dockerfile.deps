@@ -1,0 +1,40 @@
+FROM dppo_deps_image
+
+# Install zsh for set_path.sh and entrypoint
+RUN apt-get update && apt-get install -y zsh && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Copy the entire project context (application code, scripts, etc.)
+# This will overlay on top of the /workspace where pyproject.toml was already copied and deps installed
+COPY . /workspace/
+
+# Set WANDB_API_KEY (user has filled this in manually)
+ENV WANDB_API_KEY="94b47bbaeb3d3c776a3295141a42a9485f008d18"
+
+# Set WANDB_BASE_URL for custom W&B server
+ENV WANDB_BASE_URL="https://far.wandb.io"
+
+# Add workspace to PYTHONPATH
+ENV PYTHONPATH="/workspace:${PYTHONPATH}"
+
+# Mark the mounted workspace as a safe directory for git
+RUN git config --global --add safe.directory /workspace
+
+# Make set_path.sh executable
+RUN chmod +x script/set_path.sh
+
+# ENV ENTITY="far-wandb" # This is commented out, set_path.sh uses its default
+
+# Run set_path.sh. It will use ENV for ENTITY (if set) and defaults for DATA/LOG dirs.
+RUN zsh script/set_path.sh
+
+# The pip install .[all] step has been moved to dppo_deps_image
+
+# Copy the entrypoint script and make it executable
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# CMD has been removed, specify the command at runtime 
